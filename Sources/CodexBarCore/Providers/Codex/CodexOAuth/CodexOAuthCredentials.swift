@@ -202,12 +202,13 @@ public enum CodexOAuthCredentialsStore {
 
     private static func renameItem(at sourceURL: URL, to destinationURL: URL) throws {
         #if os(Windows)
+        // swift-corelibs-foundation on Windows doesn't implement replaceItemAt; remove-then-move.
+        // Not perfectly atomic, but adequate for the single-writer credential file on the MVP.
         let fileManager = FileManager.default
         if fileManager.fileExists(atPath: destinationURL.path) {
-            _ = try fileManager.replaceItemAt(destinationURL, withItemAt: sourceURL)
-        } else {
-            try fileManager.moveItem(at: sourceURL, to: destinationURL)
+            try? fileManager.removeItem(at: destinationURL)
         }
+        try fileManager.moveItem(at: sourceURL, to: destinationURL)
         return
         #else
         let result = sourceURL.path.withCString { sourcePath in
