@@ -1507,6 +1507,7 @@ extension UsageFetcher {
         return state.toUsageSnapshot()
     }
 
+    #if !os(Windows)
     static func _mapCodexStatusForTesting(_ status: CodexStatusSnapshot) throws -> UsageSnapshot {
         guard let state = CodexReconciledState.fromCLI(
             primary: self.makeTTYWindow(
@@ -1525,6 +1526,7 @@ extension UsageFetcher {
         }
         return state.toUsageSnapshot()
     }
+    #endif
 
     public static func _recoverCodexRPCUsageFromErrorForTesting(_ message: String) -> UsageSnapshot? {
         self.recoverUsageFromRPCError(RPCWireError.requestFailed(message))

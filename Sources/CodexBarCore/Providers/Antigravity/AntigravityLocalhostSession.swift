@@ -46,7 +46,7 @@ final class LocalhostSessionDelegate: NSObject {
         disposition: URLSession.AuthChallengeDisposition,
         credential: URLCredential?)
     {
-        #if os(Linux)
+        #if os(Linux) || os(Windows)
         return (.performDefaultHandling, nil)
         #else
         let protectionSpace = challenge.protectionSpace

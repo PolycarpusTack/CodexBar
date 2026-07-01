@@ -192,5 +192,18 @@ public struct TTYCommandRunner {
             purposes: [.tty, .nodeTooling],
             env: ProcessInfo.processInfo.environment)
     }
+
+    static func enrichedEnvironment(
+        baseEnv: [String: String] = ProcessInfo.processInfo.environment,
+        loginPATH: [String]? = LoginShellPathCache.shared.current,
+        home _: String = NSHomeDirectory()) -> [String: String]
+    {
+        var env = baseEnv
+        env["PATH"] = PathBuilder.effectivePATH(
+            purposes: [.tty, .nodeTooling],
+            env: baseEnv,
+            loginPATH: loginPATH)
+        return env
+    }
 }
 #endif

@@ -9,6 +9,18 @@ import Glibc
 import Musl
 #endif
 
+#if os(Windows)
+// Windows lacks POSIX signal sources (SIGHUP / DispatchSource.makeSignalSource / kill).
+// Provide an API-compatible no-op so the CLI entry point compiles.
+final class CLITerminationSignalMonitor: @unchecked Sendable {
+    init(onSignal: @escaping @Sendable (Int32) -> Void) { _ = onSignal }
+    func cancel() {}
+    static func terminateActiveHelpersAndReraise(_ signalNumber: Int32) {
+        TTYCommandRunner.terminateActiveProcessesForAppShutdown()
+        _ = signalNumber
+    }
+}
+#else
 private func handleCLITerminationSignal(_: Int32) {}
 
 final class CLITerminationSignalMonitor: @unchecked Sendable {
@@ -77,3 +89,4 @@ final class CLITerminationSignalMonitor: @unchecked Sendable {
         #endif
     }
 }
+#endif

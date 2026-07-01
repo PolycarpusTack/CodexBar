@@ -42,8 +42,10 @@ enum CodexBarCLI {
                 await self.runUsage(invocation.parsedValues)
             case ["cost"]:
                 await self.runCost(invocation.parsedValues)
+            #if !os(Windows)
             case ["serve"]:
                 await self.runServe(invocation.parsedValues)
+            #endif
             case ["config", "validate"]:
                 self.runConfigValidate(invocation.parsedValues)
             case ["config", "dump"]:
@@ -81,7 +83,11 @@ enum CodexBarCLI {
     private static func commandDescriptors() -> [CommandDescriptor] {
         let usageSignature = CommandSignature.describe(UsageOptions())
         let costSignature = CommandSignature.describe(CostOptions())
+        #if !os(Windows)
         let serveSignature = CommandSignature.describe(ServeOptions())
+        #else
+        let serveSignature = CommandSignature() // `serve` is unavailable on Windows (no Winsock server).
+        #endif
         let configSignature = CommandSignature.describe(ConfigOptions())
         let configProviderToggleSignature = CommandSignature.describe(ConfigProviderToggleOptions())
         let configSetAPIKeySignature = CommandSignature.describe(ConfigSetAPIKeyOptions())

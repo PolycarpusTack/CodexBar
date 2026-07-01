@@ -13,6 +13,12 @@ public enum ProviderVersionDetector {
     public static func claudeVersion() -> String? { nil }
     public static func codexVersion() -> String? { nil }
     public static func geminiVersion() -> String? { nil }
+    static func run(
+        path _: String,
+        args _: [String],
+        timeout _: TimeInterval = 2.0,
+        environment _: [String: String]? = nil,
+        mergeStandardError _: Bool = false) -> String? { nil }
 }
 #else
 public enum ProviderVersionDetector {

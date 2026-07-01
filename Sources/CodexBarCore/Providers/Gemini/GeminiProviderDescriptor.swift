@@ -52,11 +52,15 @@ struct GeminiStatusFetchStrategy: ProviderFetchStrategy {
     }
 
     func fetch(_: ProviderFetchContext) async throws -> ProviderFetchResult {
+        #if os(Windows)
+        throw WindowsUnsupportedProvider.cli("Gemini")
+        #else
         let probe = GeminiStatusProbe()
         let snap = try await probe.fetch()
         return self.makeResult(
             usage: snap.toUsageSnapshot(),
             sourceLabel: Self.sourceLabel)
+        #endif
     }
 
     func shouldFallback(on _: Error, context _: ProviderFetchContext) -> Bool {

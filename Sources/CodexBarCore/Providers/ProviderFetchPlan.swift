@@ -90,7 +90,9 @@ public struct ProviderFetchContext: Sendable {
 
 public enum ProviderCLISessionLifecycle {
     public static func shutdownPersistentSessions() async {
+        #if !os(Windows)
         await AntigravityCLISession.shared.reset()
+        #endif
     }
 }
 

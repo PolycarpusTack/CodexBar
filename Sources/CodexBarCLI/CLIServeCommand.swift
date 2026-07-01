@@ -1,3 +1,4 @@
+#if !os(Windows)
 import CodexBarCore
 import Commander
 import Foundation
@@ -902,3 +903,4 @@ extension CodexBarCLI {
         self.serveJSON(ServeErrorPayload(error: message), status: status)
     }
 }
+#endif

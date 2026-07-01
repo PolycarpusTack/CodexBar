@@ -470,7 +470,11 @@ public struct ClaudeUsageFetcher: ClaudeUsageFetching, Sendable {
             case .web:
                 return try await self.fetcher.loadViaWebAPI()
             case .cli:
+                #if os(Windows)
+                throw ClaudeUsageError.parseFailed("Claude CLI usage is not available on Windows.")
+                #else
                 return try await self.loadViaCLIWithRetry(model: model)
+                #endif
             }
         }
 
@@ -545,12 +549,17 @@ public struct ClaudeUsageFetcher: ClaudeUsageFetching, Sendable {
             case .web:
                 return try await self.fetcher.loadViaWebAPI()
             case .cli:
+                #if os(Windows)
+                throw ClaudeUsageError.parseFailed("Claude CLI usage is not available on Windows.")
+                #else
                 return try await self.loadViaAutoCLI(model: model)
+                #endif
             case .auto:
                 throw ClaudeUsageError.parseFailed("Planner emitted invalid auto execution step.")
             }
         }
 
+        #if !os(Windows)
         private func loadViaAutoCLI(model: String) async throws -> ClaudeUsageSnapshot {
             do {
                 return try await self.loadViaCLI(model: model, timeout: ClaudeUsageFetcher.cliAutoProbeTimeout)
@@ -604,6 +613,7 @@ public struct ClaudeUsageFetcher: ClaudeUsageFetching, Sendable {
             snapshot = await self.fetcher.applyWebExtrasIfNeeded(to: snapshot)
             return snapshot
         }
+        #endif
 
         private static func directCLIUsageTimeout(for ptyTimeout: TimeInterval) -> TimeInterval {
             min(max(ptyTimeout / 3, 6), 8)
@@ -751,6 +761,10 @@ extension ClaudeUsageFetcher {
     }
 
     public func debugRawProbe(model: String = "sonnet") async -> String {
+        #if os(Windows)
+        _ = model
+        return "Claude CLI probe is not available on Windows."
+        #else
         do {
             let snap = try await self.loadViaPTY(model: model, timeout: Self.cliProbeTimeout)
             let opus = snap.opus?.remainingPercent ?? -1
@@ -766,6 +780,7 @@ extension ClaudeUsageFetcher {
         } catch {
             return "Probe failed: \(error)"
         }
+        #endif
     }
 
     public func loadLatestUsage(model: String = "sonnet") async throws -> ClaudeUsageSnapshot {
@@ -1163,6 +1178,7 @@ extension ClaudeUsageFetcher {
 
     // MARK: - PTY-based probe (no tmux)
 
+    #if !os(Windows)
     private func loadViaPTY(model: String, timeout: TimeInterval = 10) async throws -> ClaudeUsageSnapshot {
         guard let claudeBinary = ClaudeCLIResolver.resolvedBinaryPath(environment: self.environment) else {
             throw ClaudeUsageError.claudeNotInstalled
@@ -1243,6 +1259,7 @@ extension ClaudeUsageFetcher {
             loginMethod: snap.loginMethod,
             rawText: snap.rawText)
     }
+    #endif
 
     private func applyWebExtrasIfNeeded(to snapshot: ClaudeUsageSnapshot) async -> ClaudeUsageSnapshot {
         guard self.useWebExtras, self.dataSource != .web else { return snapshot }

@@ -1,3 +1,4 @@
+#if !os(Windows)
 import Foundation
 #if canImport(Darwin)
 import Darwin
@@ -431,3 +432,4 @@ private func closeSocket(_ fd: Int32) {
     Musl.close(fd)
     #endif
 }
+#endif

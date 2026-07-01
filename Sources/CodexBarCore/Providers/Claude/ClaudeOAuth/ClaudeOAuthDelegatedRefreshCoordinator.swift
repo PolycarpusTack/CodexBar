@@ -233,7 +233,11 @@ public enum ClaudeOAuthDelegatedRefreshCoordinator {
             return
         }
         #endif
+        #if !os(Windows)
         try await ClaudeStatusProbe.touchOAuthAuthPath(timeout: timeout, environment: environment)
+        #else
+        _ = (timeout, environment)
+        #endif
     }
 
     private enum KeychainChangeObservationBaseline {
