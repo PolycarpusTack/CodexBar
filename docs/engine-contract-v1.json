@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://steipete.dev/codexbar/engine-contract-v1.json",
+  "title": "CodexBar Engine Contract v1",
+  "description": "Pinned JSON shape emitted by `CodexBarCLI usage --format json --json-only`. Forward-compatible: additionalProperties are allowed and must be ignored by consumers. Only the fields marked required are guaranteed.",
+  "type": "array",
+  "items": { "$ref": "#/definitions/ProviderResult" },
+  "definitions": {
+    "ProviderResult": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["provider"],
+      "properties": {
+        "provider": { "type": "string" },
+        "source": { "type": "string" },
+        "usage": { "$ref": "#/definitions/Usage" },
+        "credits": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/definitions/Credits" }]
+        }
+      }
+    },
+    "Usage": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "primary": { "oneOf": [{ "type": "null" }, { "$ref": "#/definitions/Window" }] },
+        "secondary": { "oneOf": [{ "type": "null" }, { "$ref": "#/definitions/Window" }] },
+        "tertiary": { "oneOf": [{ "type": "null" }, { "$ref": "#/definitions/Window" }] },
+        "dataConfidence": {
+          "type": "string",
+          "enum": ["exact", "estimated", "percentOnly", "unknown"]
+        },
+        "identity": { "oneOf": [{ "type": "null" }, { "$ref": "#/definitions/Identity" }] },
+        "updatedAt": { "type": "string" }
+      }
+    },
+    "Window": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["usedPercent", "windowMinutes"],
+      "properties": {
+        "usedPercent": { "type": "number", "minimum": 0 },
+        "windowMinutes": { "type": "integer" },
+        "resetsAt": { "type": ["string", "null"] },
+        "resetDescription": { "type": ["string", "null"] }
+      }
+    },
+    "Identity": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "providerID": { "type": "string" },
+        "accountEmail": { "type": ["string", "null"] },
+        "loginMethod": { "type": ["string", "null"] }
+      }
+    },
+    "Credits": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "remaining": { "type": ["number", "null"] },
+        "updatedAt": { "type": ["string", "null"] },
+        "events": { "type": "array" }
+      }
+    }
+  }
+}
