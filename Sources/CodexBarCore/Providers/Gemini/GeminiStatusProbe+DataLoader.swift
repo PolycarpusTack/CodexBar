@@ -1,3 +1,4 @@
+#if !os(Windows)
 import Foundation
 #if canImport(FoundationNetworking)
 import FoundationNetworking
@@ -129,3 +130,4 @@ extension GeminiStatusProbe {
         return (Data(body.utf8), response)
     }
 }
+#endif

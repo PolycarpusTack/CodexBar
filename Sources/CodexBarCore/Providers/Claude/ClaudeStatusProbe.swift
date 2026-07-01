@@ -1,3 +1,4 @@
+#if !os(Windows)
 import Foundation
 
 public struct ClaudeStatusSnapshot: Sendable {
@@ -941,3 +942,4 @@ public struct ClaudeStatusProbe: Sendable {
             && normalizedText.contains("claudecodeusage")
     }
 }
+#endif

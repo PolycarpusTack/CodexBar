@@ -1,3 +1,4 @@
+#if !os(Windows)
 import Foundation
 
 public struct CodexStatusSnapshot: Sendable {
@@ -292,3 +293,4 @@ public struct CodexStatusProbe {
         return lower.contains("update available") && lower.contains("codex")
     }
 }
+#endif

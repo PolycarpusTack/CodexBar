@@ -1,3 +1,4 @@
+#if !os(Windows)
 import Foundation
 
 public enum CLIProbeSessionResetter {
@@ -7,3 +8,4 @@ public enum CLIProbeSessionResetter {
         await AntigravityCLISession.shared.reset()
     }
 }
+#endif

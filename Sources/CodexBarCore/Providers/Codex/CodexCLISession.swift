@@ -1,3 +1,4 @@
+#if !os(Windows)
 #if canImport(Darwin)
 import Darwin
 #elseif canImport(Glibc)
@@ -425,3 +426,4 @@ actor CodexCLISession {
         try handle.write(contentsOf: data)
     }
 }
+#endif

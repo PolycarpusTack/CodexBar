@@ -1,3 +1,4 @@
+#if !os(Windows)
 import Foundation
 #if canImport(FoundationNetworking)
 import FoundationNetworking
@@ -1152,3 +1153,4 @@ extension GeminiStatusProbe {
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
+#endif

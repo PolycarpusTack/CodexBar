@@ -645,6 +645,11 @@ public enum ShellCommandLocator {
         arguments: [String],
         timeout: TimeInterval) -> Data?
     {
+        #if os(Windows)
+        // Windows has no login shell / posix_spawn; PATH is taken from the process env instead.
+        _ = (shell, arguments, timeout)
+        return nil
+        #else
         // Pipes for stdout/stderr.  stdin is redirected from /dev/null in the child
         // via posix_spawn_file_actions_addopen below.
         var stdoutFds: (read: Int32, write: Int32) = (-1, -1)
@@ -821,6 +826,7 @@ public enum ShellCommandLocator {
             if stderrDone.fire() { drainGroup.leave() }
         }
         return stdoutCollector.drain()
+        #endif
     }
 
     // swiftlint:enable cyclomatic_complexity

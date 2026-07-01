@@ -1,3 +1,4 @@
+#if !os(Windows)
 import Foundation
 
 final class CodexCLILaunchGate: @unchecked Sendable {
@@ -68,3 +69,4 @@ final class CodexCLILaunchGate: @unchecked Sendable {
             "Last error: \(originalMessage)"
     }
 }
+#endif

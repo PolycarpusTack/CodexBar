@@ -3,7 +3,7 @@ import Foundation
 import Musl
 #elseif canImport(Glibc)
 import Glibc
-#else
+#elseif canImport(Darwin)
 import Darwin
 #endif
 
@@ -783,6 +783,19 @@ extension CostUsageScanner {
 
     static func codexFileMetadata(fileURL: URL) -> CodexFileMetadata {
         let path = fileURL.path
+        #if os(Windows)
+        // Windows: derive mtime/size via Foundation; no stable inode id available.
+        guard let attrs = try? FileManager.default.attributesOfItem(atPath: path) else {
+            return CodexFileMetadata(path: path, mtimeUnixMs: 0, size: 0, fileId: nil)
+        }
+        let modified = (attrs[.modificationDate] as? Date) ?? Date(timeIntervalSince1970: 0)
+        let size = (attrs[.size] as? NSNumber)?.int64Value ?? 0
+        return CodexFileMetadata(
+            path: path,
+            mtimeUnixMs: Int64(modified.timeIntervalSince1970 * 1000),
+            size: size,
+            fileId: nil)
+        #else
         var info = stat()
         guard path.withCString({ fstatat(AT_FDCWD, $0, &info, 0) }) == 0 else {
             return CodexFileMetadata(path: path, mtimeUnixMs: 0, size: 0, fileId: nil)
@@ -799,6 +812,7 @@ extension CostUsageScanner {
             mtimeUnixMs: modifiedSeconds * 1000 + modifiedNanoseconds / 1_000_000,
             size: Int64(info.st_size),
             fileId: "\(info.st_dev):\(info.st_ino)")
+        #endif
     }
 
     static func dropCachedCodexFile(

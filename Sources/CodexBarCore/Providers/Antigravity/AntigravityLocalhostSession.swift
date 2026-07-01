@@ -9,7 +9,7 @@ enum LocalhostTrustPolicy {
         authenticationMethod: String,
         hasServerTrust: Bool) -> Bool
     {
-        #if !os(Linux)
+        #if !os(Linux) && !os(Windows)
         guard authenticationMethod == NSURLAuthenticationMethodServerTrust else { return false }
         #endif
         let normalizedHost = host.lowercased()

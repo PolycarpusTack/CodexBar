@@ -1,3 +1,4 @@
+#if !os(Windows)
 #if canImport(Darwin)
 import Darwin
 #elseif canImport(Glibc)
@@ -807,3 +808,4 @@ package final class SpawnedProcessGroup: @unchecked Sendable {
         return signal == 0 ? (rawStatus >> 8) & 0xFF : signal
     }
 }
+#endif

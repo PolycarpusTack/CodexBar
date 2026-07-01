@@ -157,6 +157,18 @@ public enum CodexOAuthCredentialsStore {
         let stagedURL = url.deletingLastPathComponent().appendingPathComponent(
             ".\(url.lastPathComponent).codexbar-staged-\(UUID().uuidString)",
             isDirectory: false)
+        #if os(Windows)
+        // Windows: no POSIX 0600/O_EXCL; stage then atomically replace via Foundation.
+        do {
+            try data.write(to: stagedURL, options: .atomic)
+            try beforePublish?(stagedURL)
+            try self.renameItem(at: stagedURL, to: url)
+        } catch {
+            try? fileManager.removeItem(at: stagedURL)
+            throw error
+        }
+        return
+        #else
         let stagedPath = stagedURL.path
         let descriptor = stagedPath.withCString {
             open($0, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, mode_t(0o600))
@@ -185,9 +197,19 @@ public enum CodexOAuthCredentialsStore {
             try? fileManager.removeItem(at: stagedURL)
             throw error
         }
+        #endif
     }
 
     private static func renameItem(at sourceURL: URL, to destinationURL: URL) throws {
+        #if os(Windows)
+        let fileManager = FileManager.default
+        if fileManager.fileExists(atPath: destinationURL.path) {
+            _ = try fileManager.replaceItemAt(destinationURL, withItemAt: sourceURL)
+        } else {
+            try fileManager.moveItem(at: sourceURL, to: destinationURL)
+        }
+        return
+        #else
         let result = sourceURL.path.withCString { sourcePath in
             destinationURL.path.withCString { destinationPath in
                 rename(sourcePath, destinationPath)
@@ -196,6 +218,7 @@ public enum CodexOAuthCredentialsStore {
         guard result == 0 else {
             throw self.posixError(code: errno, path: destinationURL.path)
         }
+        #endif
     }
 
     private static func posixError(code: Int32, path: String) -> NSError {

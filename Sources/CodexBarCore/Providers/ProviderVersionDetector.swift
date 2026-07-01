@@ -7,6 +7,14 @@ import Musl
 #endif
 import Foundation
 
+#if os(Windows)
+// CLI version detection shells out via PTY, which is unsupported on the Windows MVP.
+public enum ProviderVersionDetector {
+    public static func claudeVersion() -> String? { nil }
+    public static func codexVersion() -> String? { nil }
+    public static func geminiVersion() -> String? { nil }
+}
+#else
 public enum ProviderVersionDetector {
     public static func claudeVersion() -> String? {
         guard let path = TTYCommandRunner.which("claude") else { return nil }
@@ -117,3 +125,4 @@ public enum ProviderVersionDetector {
         return exitSemaphore.wait(timeout: .now() + 1.0) == .success
     }
 }
+#endif

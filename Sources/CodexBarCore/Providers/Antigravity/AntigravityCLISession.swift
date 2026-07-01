@@ -1,3 +1,4 @@
+#if !os(Windows)
 #if canImport(Darwin)
 import Darwin
 #elseif canImport(Glibc)
@@ -1268,3 +1269,4 @@ final class AntigravityFileCLISessionLaunchLock: AntigravityCLISessionLaunchLock
         return try operation()
     }
 }
+#endif

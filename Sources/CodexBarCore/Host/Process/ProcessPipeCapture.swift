@@ -1,3 +1,4 @@
+#if !os(Windows)
 import Foundation
 
 package final class ProcessPipeCapture: @unchecked Sendable {
@@ -136,3 +137,4 @@ package final class ProcessPipeCapture: @unchecked Sendable {
         return snapshot
     }
 }
+#endif

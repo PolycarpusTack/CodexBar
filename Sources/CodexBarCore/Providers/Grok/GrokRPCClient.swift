@@ -84,7 +84,7 @@ final class GrokRPCClient: @unchecked Sendable {
             }
             guard let text = String(data: data, encoding: .utf8), !text.isEmpty else { return }
             for line in text.split(whereSeparator: \.isNewline) {
-                #if !os(Linux)
+                #if !os(Linux) && !os(Windows)
                 fputs("[grok stderr] \(line)\n", stderr)
                 #endif
             }

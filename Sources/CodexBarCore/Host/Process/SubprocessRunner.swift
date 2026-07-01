@@ -1,3 +1,4 @@
+#if !os(Windows)
 #if canImport(Darwin)
 import Darwin
 #elseif canImport(Glibc)
@@ -289,3 +290,4 @@ public enum SubprocessRunner {
         }
     }
 }
+#endif

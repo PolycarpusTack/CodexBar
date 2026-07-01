@@ -883,7 +883,7 @@ private final class CodexRPCClient: @unchecked Sendable {
     }
 
     private static func debugWriteStderr(_ message: String) {
-        #if !os(Linux)
+        #if !os(Linux) && !os(Windows)
         fputs(message, stderr)
         #endif
     }

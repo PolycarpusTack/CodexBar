@@ -793,6 +793,10 @@ public enum CookieHeaderCache {
 
     private static func withLegacyMutationLock<T>(_ operation: () throws -> T) throws -> T {
         try self.legacyMutationLock.withLock {
+            #if os(Windows)
+            // Windows MVP: rely on the in-process lock only (no cross-process flock).
+            return try operation()
+            #else
             let lockURL = self.legacyMutationLockURL
             try FileManager.default.createDirectory(
                 at: lockURL.deletingLastPathComponent(),
@@ -811,6 +815,7 @@ public enum CookieHeaderCache {
                 }
             }
             return try operation()
+            #endif
         }
     }
 
