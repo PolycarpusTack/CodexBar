@@ -12,11 +12,24 @@ let sweetCookieKitDependency: Package.Dependency =
 
 let sqlite3LibDir = ProcessInfo.processInfo.environment["CODEXBAR_SQLITE3_LIB_DIR"]?
     .trimmingCharacters(in: .whitespacesAndNewlines)
-let sqlite3LinkerSettings: [LinkerSetting] = if let sqlite3LibDir, !sqlite3LibDir.isEmpty {
-    [.unsafeFlags(["-L\(sqlite3LibDir)"], .when(platforms: [.linux]))]
-} else {
-    []
-}
+
+// Windows has no system sqlite3, so the CSQLite3 module map's `link "sqlite3"` needs a lib to
+// satisfy the linker. Ship a prebuilt sqlite3.lib in-repo and point the MSVC linker at it via a
+// path resolved from this manifest's own location, so `swift build` works with no extra flags.
+// `CODEXBAR_SQLITE3_LIB_DIR` still overrides (used by the Linux cross-build).
+let packageRootDir = URL(fileURLWithPath: #filePath).deletingLastPathComponent().path
+let windowsSqlite3LibDir =
+    (sqlite3LibDir?.isEmpty == false) ? sqlite3LibDir! : "\(packageRootDir)/Vendored/windows/x64"
+
+let sqlite3LinkerSettings: [LinkerSetting] = {
+    var settings: [LinkerSetting] = []
+    if let sqlite3LibDir, !sqlite3LibDir.isEmpty {
+        settings.append(.unsafeFlags(["-L\(sqlite3LibDir)"], .when(platforms: [.linux])))
+    }
+    settings.append(
+        .unsafeFlags(["-Xlinker", "/LIBPATH:\(windowsSqlite3LibDir)"], .when(platforms: [.windows])))
+    return settings
+}()
 
 let package = Package(
     name: "CodexBar",
