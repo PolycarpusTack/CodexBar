@@ -13,10 +13,14 @@ let sweetCookieKitDependency: Package.Dependency =
 let sqlite3LibDir = ProcessInfo.processInfo.environment["CODEXBAR_SQLITE3_LIB_DIR"]?
     .trimmingCharacters(in: .whitespacesAndNewlines)
 
-// Windows has no system sqlite3, so the CSQLite3 module map's `link "sqlite3"` needs a lib to
-// satisfy the linker. Ship a prebuilt sqlite3.lib in-repo and point the MSVC linker at it via a
-// path resolved from this manifest's own location, so `swift build` works with no extra flags.
-// `CODEXBAR_SQLITE3_LIB_DIR` still overrides (used by the Linux cross-build).
+// Windows has no system sqlite3, and SweetCookieKit declares `.linkedLibrary("sqlite3")`
+// UNCONDITIONALLY, so the MSVC linker requires a `sqlite3.lib` file on its search path — even
+// though the Windows MVP reaches no sqlite symbol at runtime (the built exe imports no
+// winsqlite3.dll; cookie/cost paths are walled/stubbed — TD-5). We satisfy the flag with a ~70 KB
+// IMPORT library for the OS-provided winsqlite3.dll, regenerable from the committed text
+// `sqlite3.def` via `Scripts/windows/build-sqlite3-lib.ps1` (no opaque binary — TD-4/A2-2).
+// The MSVC linker is pointed at it via a path resolved from this manifest's own location, so
+// `swift build` works with no extra flags. `CODEXBAR_SQLITE3_LIB_DIR` still overrides (Linux cross-build).
 let packageRootDir = URL(fileURLWithPath: #filePath).deletingLastPathComponent().path
 let windowsSqlite3LibDir =
     (sqlite3LibDir?.isEmpty == false) ? sqlite3LibDir! : "\(packageRootDir)/Vendored/windows/x64"

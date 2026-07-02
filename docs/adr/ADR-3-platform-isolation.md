@@ -60,8 +60,10 @@ The macOS and Linux build/test paths are unchanged by this work.
 
 - Core + CLI compile, link, and run on Windows (`21,547 → 0` Core errors, ~40 files
   changed, all on branch). Codex OAuth-file fetch returns real usage.
-- New Windows-specific debt is tracked: TD-4 (committed `sqlite3.lib`, from
-  `SweetCookieKit`'s unconditional `-lsqlite3`), TD-5 (CLI providers stubbed on
-  Windows), TD-6 (non-atomic credential write-back).
+- New Windows-specific debt is tracked: TD-4 (satisfying `SweetCookieKit`'s unconditional
+  `-lsqlite3` — now a ~70 KB import lib for the OS `winsqlite3.dll`, regenerable from a committed
+  `sqlite3.def`; A2-2), TD-5 (CLI providers stubbed on Windows), TD-6 (non-atomic credential
+  write-back). Note: the built exe imports no `winsqlite3.dll` — no sqlite symbol is reachable in
+  the MVP, so `-lsqlite3` is purely a link-flag requirement.
 - Reviving a walled subsystem (CLI providers, `serve`) is a bounded, well-marked
   follow-up, not a redesign.

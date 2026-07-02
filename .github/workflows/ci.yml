@@ -331,8 +331,14 @@ jobs:
         shell: pwsh
         run: swift --version
 
-      # Links against the committed Vendored/windows/x64/sqlite3.lib via Package.swift's
-      # Windows-only linker setting (TD-4) — no manual /LIBPATH flag needed.
+      # Regenerate the sqlite3 import lib from source (sqlite3.def -> winsqlite3.dll) so CI proves
+      # reproducibility and never relies on the committed binary (A2-2 / TD-4).
+      - name: Regenerate sqlite3 import lib
+        shell: pwsh
+        run: pwsh -File Scripts/windows/build-sqlite3-lib.ps1
+
+      # Links against Vendored/windows/x64/sqlite3.lib via Package.swift's Windows-only linker
+      # setting — no manual /LIBPATH flag needed.
       - name: Build CodexBarCore + CodexBarCLI
         shell: pwsh
         run: swift build --product CodexBarCLI
