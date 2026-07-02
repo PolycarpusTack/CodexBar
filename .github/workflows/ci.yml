@@ -297,3 +297,75 @@ jobs:
             printf '| Swift version | `%s` |\n' "$SWIFT_VERSION"
             printf '| Swift toolchain cache hit | `%s` |\n' "${SWIFT_CACHE_HIT:-false}"
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # Windows build of the reused engine (A-3). Keeps "it compiles on Windows" continuously true.
+  # The MVP-subset Windows port (branch spike/windows-mvp) was validated on Swift 6.3.2; this job
+  # pins that toolchain rather than the repo-wide SWIFT_VERSION (6.2.1, macOS/Linux).
+  # NOTE for the first live run — two knobs may need adjustment against a real windows-latest runner:
+  #   1. WINDOWS_SWIFT_BRANCH / WINDOWS_SWIFT_TAG must name a published Windows Swift toolchain.
+  #   2. compnerd/gha-setup-swift configures the MSVC (VC++ x64) environment that `swift build`
+  #      needs on Windows; if a step can't find link.exe, an explicit VS dev-cmd step is required.
+  build-windows-cli:
+    timeout-minutes: 40
+    runs-on: windows-latest
+    env:
+      # Windows toolchain the port was proven on. compnerd/gha-setup-swift resolves these.
+      WINDOWS_SWIFT_BRANCH: swift-6.3.2-release
+      WINDOWS_SWIFT_TAG: 6.3.2-RELEASE
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Runner info
+        shell: pwsh
+        run: |
+          systeminfo | Select-String '^OS Name','^OS Version'
+          Write-Host "Arch: $env:PROCESSOR_ARCHITECTURE"
+
+      - name: Install Swift ${{ env.WINDOWS_SWIFT_TAG }} (Windows toolchain)
+        uses: compnerd/gha-setup-swift@main
+        with:
+          branch: ${{ env.WINDOWS_SWIFT_BRANCH }}
+          tag: ${{ env.WINDOWS_SWIFT_TAG }}
+
+      - name: Swift version
+        shell: pwsh
+        run: swift --version
+
+      # Links against the committed Vendored/windows/x64/sqlite3.lib via Package.swift's
+      # Windows-only linker setting (TD-4) — no manual /LIBPATH flag needed.
+      - name: Build CodexBarCore + CodexBarCLI
+        shell: pwsh
+        run: swift build --product CodexBarCLI
+
+      # The Engine Contract v1 test (A-4) lives in the CodexBarLinuxTests target, which builds on
+      # Windows too. This is the contract gate that fails CI on pinned-field drift.
+      - name: Engine Contract v1 test
+        shell: pwsh
+        run: swift test --filter EngineContractV1Tests
+
+      # Mirror the Linux --web platform gate: a web/cookie source must degrade to a structured
+      # "requires macOS" error on Windows (ADR-4), not crash.
+      - name: Smoke test CodexBarCLI.exe
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $false
+          $binDir = (swift build --product CodexBarCLI --show-bin-path | Select-Object -Last 1).Trim()
+          $bin = Join-Path $binDir 'CodexBarCLI.exe'
+          Write-Host "CLI: $bin"
+          & $bin --help    | Out-Null; if ($LASTEXITCODE -ne 0) { throw "--help exited $LASTEXITCODE" }
+          & $bin --version | Out-Null; if ($LASTEXITCODE -ne 0) { throw "--version exited $LASTEXITCODE" }
+          $web = (& $bin usage --provider codex --web 2>&1 | Out-String)
+          if ($LASTEXITCODE -eq 0) { throw "Expected 'usage --web' to fail on Windows" }
+          if ($web -notmatch 'macOS') { throw "Expected a macOS platform message; got:`n$web" }
+          Write-Host 'Platform gate OK: --web degraded with a macOS message.'
+
+      - name: Summarize Windows CLI build
+        if: ${{ always() }}
+        shell: pwsh
+        run: |
+          "### Windows CLI build`n"                         >> $env:GITHUB_STEP_SUMMARY
+          "| Field | Value |"                               >> $env:GITHUB_STEP_SUMMARY
+          "| --- | --- |"                                   >> $env:GITHUB_STEP_SUMMARY
+          "| Runner label | ``windows-latest`` |"           >> $env:GITHUB_STEP_SUMMARY
+          "| Swift toolchain | ``$env:WINDOWS_SWIFT_TAG`` |" >> $env:GITHUB_STEP_SUMMARY
