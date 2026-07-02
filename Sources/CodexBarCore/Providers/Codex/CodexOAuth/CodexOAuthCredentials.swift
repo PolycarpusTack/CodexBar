@@ -5,6 +5,9 @@ import Glibc
 #elseif canImport(Musl)
 import Musl
 #endif
+#if canImport(WinSDK)
+import WinSDK
+#endif
 import Foundation
 
 public struct CodexOAuthCredentials: Sendable {
@@ -202,13 +205,30 @@ public enum CodexOAuthCredentialsStore {
 
     private static func renameItem(at sourceURL: URL, to destinationURL: URL) throws {
         #if os(Windows)
-        // swift-corelibs-foundation on Windows doesn't implement replaceItemAt; remove-then-move.
-        // Not perfectly atomic, but adequate for the single-writer credential file on the MVP.
-        let fileManager = FileManager.default
-        if fileManager.fileExists(atPath: destinationURL.path) {
-            try? fileManager.removeItem(at: destinationURL)
+        // swift-corelibs-foundation on Windows doesn't implement replaceItemAt. Use Win32
+        // MoveFileExW with MOVEFILE_REPLACE_EXISTING to replace the destination atomically (a
+        // single rename, no remove-then-move gap), and MOVEFILE_WRITE_THROUGH so the credential
+        // file is flushed to disk before we return (durable token refresh). Supersedes TD-6.
+        func widePath(_ url: URL) -> [UInt16] {
+            url.withUnsafeFileSystemRepresentation { rep in
+                guard let rep else { return [UInt16]() }
+                return Array(String(cString: rep).utf16) + [0]
+            }
         }
-        try fileManager.moveItem(at: sourceURL, to: destinationURL)
+        let source = widePath(sourceURL)
+        let destination = widePath(destinationURL)
+        let flags = DWORD(MOVEFILE_REPLACE_EXISTING) | DWORD(MOVEFILE_WRITE_THROUGH)
+        let moved = source.withUnsafeBufferPointer { src in
+            destination.withUnsafeBufferPointer { dst in
+                MoveFileExW(src.baseAddress, dst.baseAddress, flags)
+            }
+        }
+        guard moved else {
+            throw NSError(
+                domain: "Win32.MoveFileExW",
+                code: Int(GetLastError()),
+                userInfo: [NSFilePathErrorKey: destinationURL.path])
+        }
         return
         #else
         let result = sourceURL.path.withCString { sourcePath in

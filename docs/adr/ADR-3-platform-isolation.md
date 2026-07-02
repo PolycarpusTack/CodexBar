@@ -62,8 +62,9 @@ The macOS and Linux build/test paths are unchanged by this work.
   changed, all on branch). Codex OAuth-file fetch returns real usage.
 - New Windows-specific debt is tracked: TD-4 (satisfying `SweetCookieKit`'s unconditional
   `-lsqlite3` — now a ~70 KB import lib for the OS `winsqlite3.dll`, regenerable from a committed
-  `sqlite3.def`; A2-2), TD-5 (CLI providers stubbed on Windows), TD-6 (non-atomic credential
-  write-back). Note: the built exe imports no `winsqlite3.dll` — no sqlite symbol is reachable in
-  the MVP, so `-lsqlite3` is purely a link-flag requirement.
+  `sqlite3.def`; A2-2), TD-5 (CLI providers stubbed on Windows), TD-6 (credential write-back —
+  RESOLVED via `MoveFileExW(MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)`, an atomic durable
+  rename). Note: the built exe imports no `winsqlite3.dll` — no sqlite symbol is reachable in the
+  MVP, so `-lsqlite3` is purely a link-flag requirement.
 - Reviving a walled subsystem (CLI providers, `serve`) is a bounded, well-marked
   follow-up, not a redesign.
