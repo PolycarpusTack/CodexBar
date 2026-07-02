@@ -365,6 +365,9 @@ jobs:
           if ($LASTEXITCODE -eq 0) { throw "Expected 'usage --web' to fail on Windows" }
           if ($web -notmatch 'macOS') { throw "Expected a macOS platform message; got:`n$web" }
           Write-Host 'Platform gate OK: --web degraded with a macOS message.'
+          # The intentional non-zero exit of `usage --web` lingers in $LASTEXITCODE; GitHub's pwsh
+          # wrapper exits the step with it. All checks passed, so end explicitly successful.
+          exit 0
 
       - name: Summarize Windows CLI build
         if: ${{ always() }}
