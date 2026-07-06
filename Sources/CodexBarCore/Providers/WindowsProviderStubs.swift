@@ -1,9 +1,12 @@
 #if os(Windows)
 import Foundation
 
+// swiftlint:disable type_name
 /// POSIX process id type, used in many CLI-provider signatures. Windows has no POSIX `pid_t`;
 /// alias it to Int32 so those signatures compile (the CLI code paths are unreachable on Windows).
+/// The name is deliberate — it mirrors the POSIX `pid_t` referenced across shared CLI signatures.
 public typealias pid_t = Int32
+// swiftlint:enable type_name
 
 /// Antigravity CLI session (real version drives a local `agy` process; compiled out on Windows).
 final class AntigravityCLISession: @unchecked Sendable {
