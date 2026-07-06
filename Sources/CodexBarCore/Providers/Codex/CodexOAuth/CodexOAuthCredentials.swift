@@ -205,10 +205,10 @@ public enum CodexOAuthCredentialsStore {
 
     private static func renameItem(at sourceURL: URL, to destinationURL: URL) throws {
         #if os(Windows)
-        // swift-corelibs-foundation on Windows doesn't implement replaceItemAt. Use Win32
-        // MoveFileExW with MOVEFILE_REPLACE_EXISTING to replace the destination atomically (a
-        // single rename, no remove-then-move gap), and MOVEFILE_WRITE_THROUGH so the credential
-        // file is flushed to disk before we return (durable token refresh). Supersedes TD-6.
+        /// swift-corelibs-foundation on Windows doesn't implement replaceItemAt. Use Win32
+        /// MoveFileExW with MOVEFILE_REPLACE_EXISTING to replace the destination atomically (a
+        /// single rename, no remove-then-move gap), and MOVEFILE_WRITE_THROUGH so the credential
+        /// file is flushed to disk before we return (durable token refresh). Supersedes TD-6.
         func widePath(_ url: URL) -> [UInt16] {
             url.withUnsafeFileSystemRepresentation { rep in
                 guard let rep else { return [UInt16]() }

@@ -11,13 +11,19 @@ final class AntigravityCLISession: @unchecked Sendable {
     func beginProbe(binary _: String, idleWindow _: TimeInterval? = nil) async throws -> pid_t {
         throw WindowsUnsupportedProvider.cli("Antigravity")
     }
+
     func reset() async {}
-    func drainOutput() -> Data { Data() }
+    func drainOutput() -> Data {
+        Data()
+    }
+
     func finishProbe(success _: Bool, resetAfterFetch _: Bool, forceTerminate _: Bool = false) async {}
 }
 
 enum AntigravityCLIAuthenticationPrompt {
-    static func contains(_: Data) -> Bool { false }
+    static func contains(_: Data) -> Bool {
+        false
+    }
 }
 
 /// Thrown by CLI-provider fetch paths that require the (Windows-unsupported) subprocess subsystem.
@@ -41,8 +47,13 @@ enum CodexCLILaunchGate {
 }
 
 struct CodexCLILaunchGateStub {
-    func backgroundSkipMessage(binary _: String) -> String? { nil }
-    func recordLaunchFailure(binary _: String, message _: String) -> String? { nil }
+    func backgroundSkipMessage(binary _: String) -> String? {
+        nil
+    }
+
+    func recordLaunchFailure(binary _: String, message _: String) -> String? {
+        nil
+    }
 }
 
 /// Subset of CodexStatusProbe's error surface referenced by shared code + the CLI target.
